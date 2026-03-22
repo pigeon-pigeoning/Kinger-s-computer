@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CANDA OS</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--font:'MS Sans Serif',Arial,sans-serif}
+html,body{width:100%;height:100%;background:#111;font-family:var(--font);font-size:11px;overflow:hidden;user-select:none}
+
+/* ── BOOT ── */
+#boot-screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#111;z-index:200;transition:opacity 1.2s}
+#boot-screen.fade-out{opacity:0;pointer-events:none}
+.monitor-outer{width:580px;background:linear-gradient(160deg,#6a6a9a,#4a4a7a 30%,#3a3a6a 60%,#5a5a8a);border-radius:28px;padding:40px 50px 52px;box-shadow:0 0 0 4px #2a2a4a,0 8px 40px rgba(0,0,0,.9),inset 0 2px 6px rgba(255,255,255,.12),inset 0 -2px 6px rgba(0,0,0,.4);display:flex;flex-direction:column;align-items:center;position:relative}
+.monitor-outer::before{content:'';position:absolute;top:0;left:10%;right:10%;height:18px;background:linear-gradient(180deg,rgba(255,255,255,.18),transparent);border-radius:28px 28px 0 0}
+.monitor-screen-bezel{width:100%;background:#1a1a2e;border-radius:12px;padding:8px;box-shadow:inset 0 0 20px rgba(0,0,20,.9),0 0 0 2px #2a2a4a}
+.monitor-screen{width:100%;aspect-ratio:4/3;background:linear-gradient(135deg,#a8cfe0,#c5e0f0 30%,#e8f4fc 52%,#c0d8ee 75%,#8ab8d0);border-radius:6px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.cloud{position:absolute;background:rgba(255,255,255,.75);border-radius:30px;filter:blur(5px)}
+.c1{width:100px;height:28px;top:22%;left:4%}
+.c2{width:130px;height:26px;top:52%;left:36%}
+.c3{width:75px;height:22px;top:15%;left:62%}
+.c4{width:60px;height:18px;top:68%;left:8%}
+.ca-circle{width:150px;height:150px;background:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;z-index:2;opacity:0}
+.ca-text{font-family:'Arial Black',Arial,sans-serif;font-size:52px;font-weight:900;color:#fff;letter-spacing:-3px;line-height:1;text-align:center}
+.ca-amp{font-size:28px;color:#a0d0f0;vertical-align:middle}
+.screen-overlay{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.06) 2px,rgba(0,0,0,.06) 4px);border-radius:6px;pointer-events:none}
+.screen-vignette{position:absolute;inset:0;border-radius:6px;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.35));pointer-events:none}
+.monitor-bottom{width:100%;display:flex;align-items:center;justify-content:space-between;padding:10px 4px 0}
+.monitor-brand{font-family:'Arial Black',Arial,sans-serif;font-size:11px;color:rgba(200,200,230,.5);letter-spacing:3px;font-weight:900}
+.monitor-power-btn{width:18px;height:18px;background:radial-gradient(circle at 40% 35%,#888,#333);border-radius:50%;border:2px solid #555;box-shadow:0 1px 3px rgba(0,0,0,.7),inset 0 1px 2px rgba(255,255,255,.1);cursor:pointer}
+.monitor-power-btn.on{background:radial-gradient(circle at 40% 35%,#5dfc60,#1a8a1e);box-shadow:0 0 6px rgba(80,255,80,.6)}
+#boot-text{color:#88ccff;font-family:'Courier New',monospace;font-size:13px;margin-top:18px;letter-spacing:1px;text-align:center}
+
+/* ── DESKTOP ── */
+#desktop{width:100vw;height:100vh;background:#008080;position:fixed;top:0;left:0;display:none;overflow:hidden}
+.desktop-icon{position:absolute;width:68px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px}
+.desktop-icon:hover .icon-label{background:#000080;color:#fff}
+.icon-img{width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.icon-label{color:#fff;font-size:11px;text-align:center;text-shadow:1px 1px 1px #000;line-height:1.2;word-break:break-word;padding:1px 2px}
+
+/* ── FENÊTRES WIN95 ── */
+.win-window{position:absolute;background:#c0c0c0;border:2px solid;border-color:#fff #808080 #808080 #fff;box-shadow:2px 2px 0 #000;min-width:200px;display:none;z-index:10}
+.win-window.active{z-index:20}
+.titlebar{background:linear-gradient(90deg,#000080,#1084d0);color:#fff;font-weight:bold;font-size:11px;padding:3px 4px;display:flex;align-items:center;justify-content:space-between;cursor:move;user-select:none}
+.titlebar-left{display:flex;align-items:center;gap:4px}
+.titlebar-btns{display:flex;gap:2px}
+.tb-btn{width:16px;height:14px;background:#c0c0c0;border:1px solid;border-color:#fff #808080 #808080 #fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:bold;cursor:pointer;color:#000;line-height:1}
+.tb-btn:active{border-color:#808080 #fff #fff #808080}
+.menubar{background:#c0c0c0;padding:2px 4px;display:flex;border-bottom:1px solid #808080}
+.menu-item{padding:2px 6px;cursor:default;font-size:11px}
+.menu-item:hover{background:#000080;color:#fff}
+.toolbar{background:#c0c0c0;padding:2px 4px;display:flex;align-items:center;gap:2px;border-bottom:1px solid #808080}
+.address-bar{display:flex;align-items:center;gap:4px;padding:2px 4px;border-bottom:1px solid #808080;font-size:11px}
+.address-input{flex:1;background:#fff;border:1px solid;border-color:#808080 #fff #fff #808080;padding:1px 4px;font-size:11px;font-family:inherit}
+.tb-sep{width:1px;height:20px;background:#808080;margin:0 2px;border-right:1px solid #fff}
+.tb-icon-btn{width:22px;height:20px;background:#c0c0c0;border:1px solid transparent;display:flex;align-items:center;justify-content:center;font-size:13px;cursor:default}
+.tb-icon-btn:hover{border-color:#fff #808080 #808080 #fff}
+.win-body{display:flex;height:calc(100% - 90px);min-height:260px}
+.tree-panel{width:140px;background:#fff;border-right:2px solid;border-color:#808080 #fff #fff #808080;overflow-y:auto;padding:4px;font-size:11px;flex-shrink:0}
+.tree-item{display:flex;align-items:center;gap:3px;padding:1px 2px;cursor:default;white-space:nowrap}
+.tree-item:hover{background:#000080;color:#fff}
+.tree-item.selected{background:#000080;color:#fff}
+.file-area{flex:1;background:#fff;overflow-y:auto;padding:4px}
+.file-grid{display:grid;grid-template-columns:repeat(auto-fill,80px);gap:4px;padding:4px}
+.file-item{display:flex;flex-direction:column;align-items:center;padding:4px;gap:3px;cursor:default;width:80px}
+.file-item:hover{background:#000080;color:#fff}
+.file-item:hover .file-label{color:#fff}
+.file-item.selected{background:#000080}
+.file-item.selected .file-label{color:#fff}
+.file-icon{font-size:24px;line-height:1}
+.file-label{font-size:11px;text-align:center;color:#000;word-break:break-word;line-height:1.2;max-width:76px}
+.statusbar{border-top:2px solid;border-color:#808080 #fff #fff #808080;padding:2px 8px;font-size:11px;display:flex;gap:16px;color:#000;background:#c0c0c0}
+.status-panel{border:1px solid;border-color:#808080 #fff #fff #808080;padding:1px 6px;font-size:11px}
+.folder-back{display:flex;align-items:center;gap:4px;padding:4px 8px;border-bottom:1px solid #c0c0c0;font-size:11px;cursor:pointer;color:#000080}
+.folder-back:hover{text-decoration:underline}
+
+/* ── FENÊTRE WIKI ── */
+#wiki-win{position:absolute;background:#c0c0c0;border:2px solid;border-color:#fff #808080 #808080 #fff;box-shadow:2px 2px 0 #000;display:none;z-index:25;width:420px;height:320px}
+#wiki-body{background:#fff;width:100%;height:calc(100% - 46px);overflow-y:auto;padding:12px 14px;font-size:11px;line-height:1.7;color:#000}
+#wiki-body h2{font-size:13px;font-weight:bold;border-bottom:1px solid #c0c0c0;margin-bottom:6px;padding-bottom:2px}
+#wiki-body p{margin-bottom:8px}
+#wiki-body .wiki-badge{display:inline-block;background:#000080;color:#fff;padding:1px 6px;font-size:10px;margin-right:4px;margin-bottom:4px}
+#wiki-body .wiki-stat{display:flex;justify-content:space-between;border-bottom:1px solid #e8e8e8;padding:2px 0;font-size:11px}
+#wiki-body .wiki-stat span:first-child{color:#404040}
+#wiki-body .wiki-stat span:last-child{font-weight:bold}
+
+/* ── TASKBAR ── */
+#taskbar{position:fixed;bottom:0;left:0;right:0;height:28px;background:#c0c0c0;border-top:2px solid #fff;display:flex;align-items:center;padding:0 2px;gap:4px;z-index:50}
+#start-btn{background:#c0c0c0;border:2px solid;border-color:#fff #808080 #808080 #fff;padding:2px 8px;font-weight:bold;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px;height:22px;font-family:var(--font)}
+#start-btn:active{border-color:#808080 #fff #fff #808080}
+.taskbar-sep{width:2px;height:20px;background:#808080;border-right:1px solid #fff;margin:0 2px}
+.task-btn{background:#c0c0c0;border:2px solid;border-color:#808080 #fff #fff #808080;padding:2px 8px;font-size:11px;cursor:pointer;height:22px;display:flex;align-items:center;gap:4px;max-width:160px;overflow:hidden;font-family:var(--font)}
+.task-btn.active-task{border-color:#808080 #fff #fff #808080;background:#b0b0b0}
+#clock{margin-left:auto;background:#c0c0c0;border:1px solid;border-color:#808080 #fff #fff #808080;padding:2px 8px;font-size:11px}
+
+/* ── START MENU ── */
+#start-menu{position:fixed;bottom:28px;left:0;width:180px;background:#c0c0c0;border:2px solid;border-color:#fff #808080 #808080 #fff;box-shadow:2px 2px 0 #000;display:none;z-index:200}
+.start-banner{background:linear-gradient(180deg,#808080,#404040);color:#fff;writing-mode:vertical-rl;transform:rotate(180deg);font-size:14px;font-weight:bold;padding:8px 4px;float:left;min-height:200px;letter-spacing:2px}
+.start-items{margin-left:28px}
+.start-item{padding:6px 10px;display:flex;align-items:center;gap:8px;cursor:default;font-size:11px;border-bottom:1px solid #b0b0b0}
+.start-item:hover{background:#000080;color:#fff}
+.start-icon{font-size:16px}
+
+/* ── TERMINAL ── */
+#terminal-win{position:absolute;background:#000;border:2px solid;border-color:#fff #808080 #808080 #fff;box-shadow:2px 2px 0 #000;display:none;z-index:30;width:620px;height:420px}
+#terminal-titlebar{background:linear-gradient(90deg,#1a1a1a,#333);color:#00ff00;font-weight:bold;font-size:11px;padding:3px 4px;display:flex;align-items:center;justify-content:space-between;cursor:move;user-select:none;font-family:'Courier New',monospace}
+#terminal-body{width:100%;height:calc(100% - 20px);overflow-y:auto;padding:8px;font-family:'Courier New',monospace;font-size:12px;color:#00ff00;background:#000;line-height:1.5}
+.t-bold{font-weight:bold}
+.t-underline{text-decoration:underline}
+.t-highlight{background:#00ff00;color:#000;padding:0 1px}
+.t-warning{color:#ffcc00;font-weight:bold}
+.t-error{color:#ff4444;font-weight:bold}
+.t-prompt{color:#00ff00}
+.t-dim{color:#005500}
+.t-corrupt{color:#ff44ff}
+.t-white{color:#fff}
+.t-cursor{animation:blink .6s step-end infinite;color:#00ff00}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* ── SPRITES GLITCH (Caine & Bubble) ── */
+.glitch-sprite{position:fixed;pointer-events:none;z-index:9000;font-size:0;will-change:transform}
+.glitch-sprite svg{display:block}
+
+/* ── PURGE AI ── */
+#purge-win{position:fixed;z-index:9500;width:340px;background:#c0c0c0;border:2px solid;border-color:#fff #808080 #808080 #fff;box-shadow:4px 4px 0 #000;display:none}
+.purge-body{padding:16px 14px 12px}
+.purge-icon-row{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px}
+.purge-icon{font-size:32px;line-height:1;flex-shrink:0}
+.purge-text{font-size:11px;line-height:1.6;color:#000}
+.purge-text b{font-weight:bold}
+.purge-progress-track{width:100%;height:18px;background:#808080;border:1px solid;border-color:#808080 #fff #fff #808080;margin:10px 0 4px;overflow:hidden}
+#purge-bar-fill{height:100%;width:0%;background:#000080;transition:width .1s linear}
+.purge-pct-row{display:flex;justify-content:space-between;font-size:11px;color:#000;margin-bottom:6px}
+#purge-msg{font-size:10px;color:#404040;min-height:14px}
+</style>
+</head>
+<body>
+
+<!-- BOOT -->
+<div id="boot-screen">
+  <div style="display:flex;flex-direction:column;align-items:center">
+    <div class="monitor-outer">
+      <div class="monitor-screen-bezel">
+        <div class="monitor-screen">
+          <div class="cloud c1"></div><div class="cloud c2"></div>
+          <div class="cloud c3"></div><div class="cloud c4"></div>
+          <div class="ca-circle" id="ca-logo">
+            <div class="ca-text">C<span class="ca-amp">&amp;</span>A</div>
+          </div>
+          <div class="screen-overlay"></div><div class="screen-vignette"></div>
+        </div>
+      </div>
+      <div class="monitor-bottom">
+        <div style="width:18px"></div>
+        <div class="monitor-brand">C&amp;A</div>
+        <div class="monitor-power-btn" id="power-btn" onclick="startBoot()"></div>
+      </div>
+    </div>
+    <div id="boot-text" style="opacity:0">&nbsp;</div>
+  </div>
+</div>
+
+<!-- DESKTOP -->
+<div id="desktop">
+
+  <!-- Icônes bureau -->
+  <div class="desktop-icon" style="top:12px;left:10px" ondblclick="openExplorer()">
+    <div class="icon-img">&#x1F5A5;&#xFE0F;</div><div class="icon-label">My Computer</div>
+  </div>
+  <div class="desktop-icon" style="top:82px;left:10px">
+    <div class="icon-img">&#x1F310;</div><div class="icon-label">Network Neighborhood</div>
+  </div>
+  <div class="desktop-icon" style="top:160px;left:10px">
+    <div class="icon-img">&#x1F4E5;</div><div class="icon-label">Inbox</div>
+  </div>
+  <div class="desktop-icon" style="top:232px;left:10px" ondblclick="openRecycleBin()">
+    <div class="icon-img">&#x1F5D1;&#xFE0F;</div><div class="icon-label">Recycle Bin</div>
+  </div>
+  <div class="desktop-icon" style="top:304px;left:10px" ondblclick="openExplorer()">
+    <div class="icon-img">&#x1F4C1;</div><div class="icon-label">My Briefcase</div>
+  </div>
+
+  <!-- EXPLORATEUR -->
+  <div id="explorer-win" class="win-window active" style="top:20px;left:90px;width:490px;height:380px">
+    <div class="titlebar" id="explorer-titlebar">
+      <div class="titlebar-left">
+        <span style="font-size:12px">&#x1F4C1;</span>
+        <span id="explorer-title">C:\CANDA</span>
+      </div>
+      <div class="titlebar-btns">
+        <div class="tb-btn" onclick="minimizeWin('explorer-win')">_</div>
+        <div class="tb-btn">&#x25A1;</div>
+        <div class="tb-btn" onclick="closeWin('explorer-win')">&#x2715;</div>
+      </div>
+    </div>
+    <div class="menubar">
+      <div class="menu-item">File</div><div class="menu-item">Edit</div>
+      <div class="menu-item">View</div><div class="menu-item">Help</div>
+    </div>
+    <div class="toolbar">
+      <div class="tb-icon-btn" onclick="goBack()">&#x2B05;</div>
+      <div class="tb-icon-btn">&#x27A1;</div><div class="tb-icon-btn">&#x2B06;</div>
+      <div class="tb-sep"></div>
+      <div class="tb-icon-btn">&#x2702;</div><div class="tb-icon-btn">&#x1F4CB;</div>
+      <div class="tb-icon-btn">&#x1F4CC;</div><div class="tb-sep"></div>
+      <div class="tb-icon-btn">&#x1F5D1;</div><div class="tb-icon-btn">&#x1F527;</div>
+      <div class="tb-sep"></div>
+      <div class="tb-icon-btn">&#x229E;</div><div class="tb-icon-btn">&#x2630;</div>
+    </div>
+    <div class="address-bar">
+      <span>Address</span>
+      <input class="address-input" id="address-input" value="C:\CANDA" readonly/>
+    </div>
+    <div class="win-body">
+      <div class="tree-panel">
+        <div class="tree-item selected"><span>&#x25BC;</span><span>&#x1F5A5;</span><span>My Computer</span></div>
+        <div class="tree-item" style="padding-left:14px"><span>&#x25B7;</span><span>&#x1F4BE;</span><span>3&#xBD; Floppy</span></div>
+        <div class="tree-item selected" style="padding-left:14px"><span>&#x25BC;</span><span>&#x1F4BF;</span><span>CANDA (C:)</span></div>
+        <div style="padding-left:28px">
+          <div class="tree-item selected" onclick="navTo('root')"><span>&nbsp;</span><span>&#x1F4C1;</span><span>CANDA</span></div>
+        </div>
+        <div class="tree-item" style="padding-left:14px"><span>&nbsp;</span><span>&#x1F4C1;</span><span>Program Files</span></div>
+        <div class="tree-item" style="padding-left:14px"><span>&nbsp;</span><span>&#x1F4C1;</span><span>Windows</span></div>
+        <div class="tree-item" style="margin-top:4px"><span>&#x25B7;</span><span>&#x1F4E1;</span><span>Network</span></div>
+      </div>
+      <div class="file-area" id="file-area">
+        <div class="file-grid" id="file-grid"></div>
+      </div>
+    </div>
+    <div class="statusbar">
+      <div class="status-panel" id="status-count">0 object(s)</div>
+      <div class="status-panel">Free Space: 2.40 GB</div>
+    </div>
+  </div>
+
+  <!-- POUBELLE -->
+  <div id="recycle-win" class="win-window" style="top:60px;left:130px;width:340px;height:260px;z-index:15">
+    <div class="titlebar" id="recycle-titlebar">
+      <div class="titlebar-left"><span>&#x1F5D1;</span><span>Recycle Bin</span></div>
+      <div class="titlebar-btns">
+        <div class="tb-btn" onclick="minimizeWin('recycle-win')">_</div>
+        <div class="tb-btn">&#x25A1;</div>
+        <div class="tb-btn" onclick="closeWin('recycle-win')">&#x2715;</div>
+      </div>
+    </div>
+    <div class="menubar">
+      <div class="menu-item">File</div><div class="menu-item">Edit</div><div class="menu-item">View</div>
+    </div>
+    <div style="background:#fff;width:100%;height:calc(100% - 46px);overflow:auto;position:relative">
+      <div id="recycle-empty-msg" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#808080;font-size:11px">Recycle Bin is empty.</div>
+      <div id="recycle-grid" style="display:none;padding:4px">
+        <div class="file-grid">
+          <div class="file-item"><div class="file-icon">&#x1F3A9;</div><div class="file-label">CAINE</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WIKI -->
+  <div id="wiki-win">
+    <div class="titlebar" id="wiki-titlebar">
+      <div class="titlebar-left"><span>&#x1F4D6;</span><span id="wiki-title">Wiki</span></div>
+      <div class="titlebar-btns">
+        <div class="tb-btn" onclick="minimizeWin('wiki-win')">_</div>
+        <div class="tb-btn">&#x25A1;</div>
+        <div class="tb-btn" onclick="closeWin('wiki-win')">&#x2715;</div>
+      </div>
+    </div>
+    <div class="menubar">
+      <div class="menu-item">File</div><div class="menu-item">View</div><div class="menu-item">Help</div>
+    </div>
+    <div id="wiki-body"></div>
+  </div>
+
+  <!-- TERMINAL -->
+  <div id="terminal-win">
+    <div id="terminal-titlebar">
+      <div style="display:flex;align-items:center;gap:6px">
+        <span>&#x265F;&#xFE0F;</span><span>kinger@circus:~$ — KingSolution 2.0 Terminal</span>
+      </div>
+      <div style="display:flex;gap:2px">
+        <div class="tb-btn" style="background:#2a2a2a;color:#0f0;border-color:#555 #111 #111 #555" onclick="minimizeWin('terminal-win')">_</div>
+        <div class="tb-btn" style="background:#2a2a2a;color:#0f0;border-color:#555 #111 #111 #555" onclick="closeTerminal()">&#x2715;</div>
+      </div>
+    </div>
+    <div id="terminal-body"></div>
+  </div>
+
+  <!-- PURGE AI -->
+  <div id="purge-win">
+    <div class="titlebar" style="background:linear-gradient(90deg,#800000,#cc0000)">
+      <div class="titlebar-left"><span>&#x26A0;&#xFE0F;</span><span>CANDA System — Purge AI</span></div>
+      <div class="titlebar-btns">
+        <div class="tb-btn" onclick="closePurge()">&#x2715;</div>
+      </div>
+    </div>
+    <div class="purge-body">
+      <div class="purge-icon-row">
+        <div class="purge-icon">&#x1F9F9;</div>
+        <div class="purge-text">
+          <b>DESTRUCTIVE WACKYTIME sequence complete.</b><br>
+          Deletion of AI agent <b>CAINE</b> (PID 1337) in progress.<br>
+          Purging artificial consciousness modules.
+        </div>
+      </div>
+      <div class="purge-progress-track"><div id="purge-bar-fill"></div></div>
+      <div class="purge-pct-row">
+        <span id="purge-msg">Initializing...</span>
+        <span id="purge-pct">0%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TASKBAR -->
+  <div id="taskbar">
+    <button id="start-btn" onclick="toggleStart()">&#x229E; <b>Start</b></button>
+    <div class="taskbar-sep"></div>
+    <div class="task-btn" id="task-explorer" style="display:none" onclick="showWin('explorer-win')">&#x1F4C1; C:\CANDA</div>
+    <div class="task-btn" id="task-recycle"  style="display:none" onclick="showWin('recycle-win')">&#x1F5D1; Recycle Bin</div>
+    <div class="task-btn" id="task-terminal" style="display:none" onclick="showWin('terminal-win')">&#x265F; Terminal</div>
+    <div class="task-btn" id="task-wiki"     style="display:none" onclick="showWin('wiki-win')">&#x1F4D6; Wiki</div>
+    <div id="clock">12:00 PM</div>
+  </div>
+
+  <!-- START MENU -->
+  <div id="start-menu">
+    <div style="overflow:hidden">
+      <div class="start-banner">CANDA</div>
+      <div class="start-items">
+        <div class="start-item" onclick="openExplorer()"><span class="start-icon">&#x1F4C1;</span>Programs</div>
+        <div class="start-item"><span class="start-icon">&#x1F4C4;</span>Documents</div>
+        <div class="start-item"><span class="start-icon">&#x2699;&#xFE0F;</span>Settings</div>
+        <div class="start-item"><span class="start-icon">&#x1F50D;</span>Find</div>
+        <div class="start-item"><span class="start-icon">&#x2753;</span>Help</div>
+        <div class="start-item" style="border-top:2px solid #808080;margin-top:4px"><span class="start-icon">&#x1F50C;</span>Shut Down</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /desktop -->
+
+<script>
+// ════════════════════════════════════════════════════════════════
+//
+//  ████████╗██╗   ██╗████████╗ ██████╗     ██████╗ ███████╗
+//     ██╔══╝██║   ██║╚══██╔══╝██╔═══██╗    ██╔══██╗██╔════╝
+//     ██║   ██║   ██║   ██║   ██║   ██║    ██║  ██║█████╗
+//     ██║   ██║   ██║   ██║   ██║   ██║    ██║  ██║██╔══╝
+//     ██║   ╚██████╔╝   ██║   ╚██████╔╝    ██████╔╝███████╗
+//
+//   Pour personnaliser le comportement quand tu double-cliques
+//   sur un fichier, cherche la section "ACTIONS FICHIERS"
+//   et le commentaire // ajoutable [nom-du-dossier]
+//
+// ════════════════════════════════════════════════════════════════
+
+// ── ÉTAT GLOBAL ──────────────────────────────────────────────
+let terminalCompleted = false;
+let glitchActive      = false;
+let glitchInterval    = null;
+let glitchSprites     = [];
+
+// ── DONNÉES WIKI PAR PERSONNAGE ──────────────────────────────
+// Pour modifier la fiche d'un personnage, trouve son entrée ici
+// et change les champs name, status, role, desc, tags, stats
+const WIKI_DATA = {
+  Pomni: {
+    name:'Pomni', icon:'🤡',
+    status:'Unstable', role:'Resident — Digital Circus',
+    desc:"Pomni is a human recently trapped inside the Abstract Digital Circus. She is recognizable by her blue and red jester costume. Her psychological state is fragile: she desperately seeks a way to escape and tries to avoid abstraction at all costs.",
+    tags:['Human','Resident','Unstable'],
+    stats:[['Status','Unstable'],['PID','Unassigned'],['Entry date','Unknown'],['Abstraction','High risk']]
+  },
+  Ragatha: {
+    name:'Ragatha', icon:'🪆',
+    status:'Stable', role:'Senior Resident — Ragdoll',
+    desc:"Ragatha is one of the most stable and kind-hearted residents of the circus. Her appearance is that of a sewn ragdoll. She tries to help newcomers adapt and maintains a positive outlook despite her situation.",
+    tags:['Ragdoll','Resident','Stable','Kind'],
+    stats:[['Status','Stable'],['PID','Unassigned'],['Seniority','High'],['Abstraction','Low risk']]
+  },
+  Gangle: {
+    name:'Gangle', icon:'😭',
+    status:'Stable', role:'Resident — Expressive masks',
+    desc:"Gangle is a resident whose identity is tied to two masks: a comedy mask and a tragedy mask. When her comedy mask is broken, she cries constantly. She is very emotional and vulnerable.",
+    tags:['Masks','Resident','Emotional'],
+    stats:[['Status','Stable'],['Active mask','Tragedy'],['Abstraction','Medium risk']]
+  },
+  Jax: {
+    name:'Jax', icon:'🐰',
+    status:'Stable', role:'Resident — Provocative rabbit',
+    desc:"Jax is a tall purple rabbit known for his sarcastic and manipulative behavior. He seems to enjoy the surrounding chaos and rarely takes situations seriously. His history inside the circus remains mysterious.",
+    tags:['Rabbit','Resident','Manipulative','Stable'],
+    stats:[['Status','Stable'],['PID','Unassigned'],['Reliability','Low'],['Abstraction','Imminent risk']]
+  },
+  Zooble: {
+    name:'Zooble', icon:'🔴',
+    status:'Stable', role:'Resident — Modular body',
+    desc:"Zooble is a character whose body is composed of interchangeable toy parts. Zooble prefers to be left alone and regularly expresses disinterest in group activities. Stable but uncooperative.",
+    tags:['Modular','Resident','Loner'],
+    stats:[['Status','Stable'],['Body','Modular'],['Abstraction','Low risk']]
+  },
+  Kinger: {
+    name:'Kinger', icon:'♟️',
+    status:'CRITICAL', role:'Resident — Chess piece (King)',
+    desc:"Kinger is one of the oldest residents of the circus, which has made him paranoid and unstable. He is represented as a king chess piece and lives in permanent anxiety. He has accumulated unusually broad access to CANDA systems, including the KingSolution 2.0 terminal.",
+    tags:['Chess','Resident','Senior','Unstable','Admin'],
+    stats:[['Status','CRITICAL'],['Seniority','Maximum'],['System access','Administrator'],['Abstraction','Imminent risk']]
+  },
+  Bubble: {
+    name:'Bubble', icon:'🫧',
+    status:'Stable', role:'Assistant — Bubble entity',
+    desc:"Bubble is a bubble-shaped entity, generally used as a voice assistant or messenger in the circus. Its role is primarily utilitarian. It is calm, repetitive in its phrases, and shows no perceptible anxiety.",
+    tags:['Bubble','Assistant','Stable'],
+    stats:[['Status','Stable'],['Role','Assistant'],['Abstraction','No risk']]
+  },
+  CAINE: {
+    name:'CAINE', icon:'🎩',
+    status:'DELETED', role:'AI — Main Circus Agent',
+    desc:"CAINE is the main artificial intelligence managing the Abstract Digital Circus. It is responsible for creating games, maintaining the environment, and controlling residents. Its process (PID 1337) was targeted by a purge attempt via the KingSolution terminal.",
+    tags:['AI','Agent','PID:1337','DELETED'],
+    stats:[['Status','DELETED'],['PID','1337'],['Path','/usr/ai/agent/caine'],['Defense','57x immersive AI']]
+  },
+  '???': {
+    name:'???', icon:'❓',
+    status:'UNKNOWN', role:'Unidentified entity',
+    desc:"Corrupted file or restricted access. No information available on this entity. Access attempts return a system protection error.",
+    tags:['Unknown','Restricted','Corrupted'],
+    stats:[['Status','UNKNOWN'],['Access','DENIED'],['Protection','Active']]
+  }
+};
+
+// ── SYSTÈME DE FICHIERS ───────────────────────────────────────
+const FS = {
+  root:{
+    path:'C:\\CANDA',
+    items:[
+      // ajoutable root — Pour ajouter un dossier ici, copie un bloc {name,type:'folder',icon,children} et crée la clé dans FS
+      {name:'Command',    type:'folder',icon:'&#x1F4C1;',children:'command'},
+      {name:'Config',     type:'folder',icon:'&#x1F4C1;',children:'config'},
+      {name:'Cookies',    type:'folder',icon:'&#x1F4C1;',children:'cookies'},
+      {name:'Cursors',    type:'folder',icon:'&#x1F4C1;',children:'generic'},
+      {name:'Favorites',  type:'folder',icon:'&#x1F4C1;',children:'generic'},
+      {name:'Characters', type:'folder',icon:'&#x1F4C1;',children:'characters'},
+      {name:'Forms',      type:'folder',icon:'&#x1F4C1;',children:'generic'},
+      {name:'Help',       type:'folder',icon:'&#x1F4C1;',children:'generic'},
+      {name:'History',    type:'folder',icon:'&#x1F4C1;',children:'history'},
+      {name:'Java',       type:'folder',icon:'&#x1F4C1;',children:'generic'},
+      {name:'Media',      type:'folder',icon:'&#x1F4C1;',children:'media'},
+      {name:'Magic',      type:'folder',icon:'&#x1F4C1;',children:'magic'},
+      {name:'Minesweite', type:'folder',icon:'&#x1F4C1;',children:'generic'},
+      {name:'Mustache',   type:'folder',icon:'&#x1F4C1;',children:'generic'},
+      {name:'Options',    type:'folder',icon:'&#x1F4C1;',children:'options'},
+      {name:'SendTo',     type:'folder',icon:'&#x1F4C1;',children:'generic'},
+      {name:'Start Menu', type:'folder',icon:'&#x1F4C1;',children:'generic'},
+      {name:'System',     type:'folder',icon:'&#x1F4C1;',children:'system'},
+      {name:'Temp',       type:'folder',icon:'&#x1F4C1;',children:'generic'},
+      {name:'Temporary Internet Files',type:'folder',icon:'&#x1F4C1;',children:'generic'},
+      {name:'Wordware',   type:'folder',icon:'&#x1F4C1;',children:'generic'},
+      {name:'Accessibility.cpl',type:'file',icon:'&#x2699;&#xFE0F;'},
+      {name:'Accessibility',    type:'file',icon:'&#x267F;'},
+      {name:'AddRemoved',       type:'file',icon:'&#x1F4E6;'},
+      {name:'Attract.exe',      type:'file',icon:'&#x1F3AA;'},
+      {name:'alarm.wdb',        type:'file',icon:'&#x1F514;'},
+      {name:'Migrate',          type:'file',icon:'&#x1F504;'},
+      {name:'Black',            type:'file',icon:'&#x2B1B;'},
+      {name:'Blue',             type:'file',icon:'&#x1F7E6;'},
+      {name:'Bubbles.bmp',      type:'file',icon:'&#x1FAE7;'},
+    ]
+  },
+  characters:{
+    path:'C:\\CANDA\\Characters',
+    items:[
+      // ajoutable characters — Ajoute un sous-dossier ici avec {name,type:'folder',icon,children:'ta_cle'} puis crée ta_cle dans FS
+      {name:'AI',                       type:'folder',icon:'&#x1F916;',children:'characters_ai',  desc:'AI folder — active system agents'},
+      {name:'CA_NeutralScans(obsolete)',type:'folder',icon:'&#x1F4C1;',children:'characters_old', desc:'Neutral scans — obsolete archives'},
+    ]
+  },
+  characters_ai:{
+    path:'C:\\CANDA\\Characters\\AI',
+    items:[
+      // ajoutable characters_ai — Ajoute des fichiers ici. type:'wiki' ouvre la fiche du personnage, type:'terminal' ouvre le terminal
+      {name:'???',   type:'wiki',     icon:'&#x2753;',    desc:'Unknown file — restricted access', wikiKey:'???'},
+      {name:'CAINE', type:'terminal', icon:'&#x1F3A9;',   desc:'AI Agent — PID 1337 — /usr/ai/agent/caine', wikiKey:'CAINE'},
+    ]
+  },
+  characters_old:{
+    path:'C:\\CANDA\\Characters\\CA_NeutralScans(obsolete)',
+    items:[
+      // ajoutable characters_old — Chaque personnage avec type:'wiki' ouvre sa fiche. Ajoute {name,type:'wiki',icon,desc,wikiKey:'NomDansWIKI_DATA'}
+      {name:'Pomni',   type:'wiki', icon:'&#x1F921;',        desc:'Neutral scan — Pomni — status: unstable',  wikiKey:'Pomni'},
+      {name:'Ragatha', type:'wiki', icon:'&#x1FA86;',        desc:'Neutral scan — Ragatha — status: stable',  wikiKey:'Ragatha'},
+      {name:'Gangle',  type:'wiki', icon:'&#x1F62D;',        desc:'Neutral scan — Gangle — status: stable',   wikiKey:'Gangle'},
+      {name:'Jax',     type:'wiki', icon:'&#x1F430;',        desc:'Neutral scan — Jax — status: stable',      wikiKey:'Jax'},
+      {name:'Zooble',  type:'wiki', icon:'&#x1F534;',        desc:'Neutral scan — Zooble — status: stable',   wikiKey:'Zooble'},
+      {name:'Kinger',  type:'wiki', icon:'&#x265F;&#xFE0F;', desc:'Neutral scan — Kinger — status: critical', wikiKey:'Kinger'},
+      {name:'Bubble',  type:'wiki', icon:'&#x1FAE7;',        desc:'Neutral scan — Bubble — status: stable',   wikiKey:'Bubble'},
+    ]
+  },
+  magic:{path:'C:\\CANDA\\Magic',items:[
+    // ajoutable magic
+    {name:'spells.exe',type:'file',icon:'&#x2728;'},
+    {name:'wand.obj',  type:'file',icon:'&#x1FA84;'},
+    {name:'tricks.dat',type:'file',icon:'&#x1F3A9;'},
+    {name:'glitch.sys',type:'file',icon:'&#x26A1;'},
+  ]},
+  media:{path:'C:\\CANDA\\Media',items:[
+    // ajoutable media
+    {name:'circus.wav',  type:'file',icon:'&#x1F3B5;'},
+    {name:'fanfare.mid', type:'file',icon:'&#x1F3BA;'},
+    {name:'laugh.wav',   type:'file',icon:'&#x1F602;'},
+    {name:'scream.wav',  type:'file',icon:'&#x1F631;'},
+    {name:'bg_theme.wav',type:'file',icon:'&#x1F3B6;'},
+  ]},
+  system:{path:'C:\\CANDA\\System',items:[
+    // ajoutable system
+    {name:'canda32.dll', type:'file',icon:'&#x2699;&#xFE0F;'},
+    {name:'circus.exe',  type:'file',icon:'&#x1F3AA;'},
+    {name:'abstract.sys',type:'file',icon:'&#x1F527;'},
+    {name:'reality.ini', type:'file',icon:'&#x1F4C4;'},
+    {name:'escape.exe',  type:'file',icon:'&#x1F6AA;'},
+  ]},
+  history:{path:'C:\\CANDA\\History',items:[
+    // ajoutable history — Pour ajouter un épisode: {name:'episode9.log', type:'file', icon:'&#x1F4C4;'}
+    {name:'episode1.log',type:'file',icon:'&#x1F4C4;'},
+    {name:'episode2.log',type:'file',icon:'&#x1F4C4;'},
+    {name:'episode3.log',type:'file',icon:'&#x1F4C4;'},
+    {name:'episode4.log',type:'file',icon:'&#x1F4C4;'},
+    {name:'episode5.log',type:'file',icon:'&#x1F4C4;'},
+    {name:'episode6.log',type:'file',icon:'&#x1F4C4;'},
+    {name:'episode7.log',type:'file',icon:'&#x1F4C4;'},
+    {name:'episode8.log',type:'file',icon:'&#x1F4C4;'},
+  ]},
+  options:{path:'C:\\CANDA\\Options',items:[
+    // ajoutable options
+    {name:'escape.cfg',  type:'file',icon:'&#x1F6AA;'},
+    {name:'glitch.cfg',  type:'file',icon:'&#x26A1;'},
+    {name:'abstract.cfg',type:'file',icon:'&#x1F527;'},
+    {name:'sound.cfg',   type:'file',icon:'&#x1F50A;'},
+  ]},
+  command:{path:'C:\\CANDA\\Command',items:[
+    // ajoutable command
+    {name:'cmd.exe',  type:'file',icon:'&#x1F4BB;'},
+    {name:'debug.bat',type:'file',icon:'&#x1F41B;'},
+    {name:'run.exe',  type:'file',icon:'&#x25B6;&#xFE0F;'},
+  ]},
+  config:{path:'C:\\CANDA\\Config',items:[
+    // ajoutable config
+    {name:'system.ini',type:'file',icon:'&#x1F4C4;'},
+    {name:'user.dat',  type:'file',icon:'&#x1F464;'},
+    {name:'boot.ini',  type:'file',icon:'&#x1F5A5;&#xFE0F;'},
+    {name:'canda.cfg', type:'file',icon:'&#x2699;&#xFE0F;'},
+  ]},
+  cookies:{path:'C:\\CANDA\\Cookies',items:[
+    // ajoutable cookies
+    {name:'caine@circus.txt',    type:'file',icon:'&#x1F4C4;'},
+    {name:'visitor@abstract.txt',type:'file',icon:'&#x1F4C4;'},
+  ]},
+  generic:{path:'',items:[{name:'(empty)',type:'file',icon:'&#x1F4C4;'}]}
+};
+
+// ════════════════════════════════════════════════════════════════
+//  TUTO — COMMENT PERSONNALISER
+// ════════════════════════════════════════════════════════════════
+//
+//  ── AJOUTER UN FICHIER DANS UN DOSSIER ──────────────────────
+//  1. Trouve le dossier dans FS (cherche // ajoutable [nom])
+//  2. Ajoute une ligne dans items:[] :
+//
+//     {name:'MonFichier.txt', type:'file', icon:'📄', desc:'Ma description'}
+//
+//     Les emojis fonctionnent directement dans icon.
+//     desc = texte affiché dans la barre de statut quand on clique.
+//
+//  ── AJOUTER UN DOSSIER ──────────────────────────────────────
+//  1. Dans items[] du dossier parent, ajoute:
+//     {name:'MonDossier', type:'folder', icon:'📁', children:'ma_cle'}
+//
+//  2. Dans FS, ajoute une nouvelle entrée:
+//     ma_cle: {
+//       path:'C:\\CANDA\\...\\MonDossier',
+//       items:[
+//         // ajoutable ma_cle
+//         {name:'fichier1.txt', type:'file', icon:'📄'}
+//       ]
+//     }
+//
+//  ── FAIRE QUELQUE CHOSE QUAND ON DOUBLE-CLIQUE UN FICHIER ────
+//  Dans la section "ACTIONS FICHIERS" plus bas, trouve la ligne:
+//
+//     } else if(item.type === 'montype') {
+//       el.ondblclick = () => { ... ton code ... };
+//     }
+//
+//  Types existants:
+//    'folder'   → ouvre le sous-dossier
+//    'wiki'     → ouvre la fiche du personnage (wikiKey requis)
+//    'terminal' → ouvre le terminal Kinger
+//    'file'     → rien au double-clic (tu peux y ajouter une action)
+//
+//  Exemple — ouvrir une alerte quand on double-clique escape.exe:
+//    Change son type en 'executable' dans FS.options, puis dans
+//    renderFiles() ajoute :
+//    } else if(item.type === 'executable') {
+//       el.ondblclick = () => alert('Access denied.');
+//    }
+//
+//  ── CHANGER LA DESCRIPTION AU CLIC ─────────────────────────
+//  Ajoute desc:'Mon texte' dans l'objet du fichier dans FS.
+//
+// ════════════════════════════════════════════════════════════════
+
+// ── WIKI ──────────────────────────────────────────────────────
+function openWiki(key) {
+  const data = WIKI_DATA[key];
+  if(!data) return;
+  const win = document.getElementById('wiki-win');
+  const body = document.getElementById('wiki-body');
+  document.getElementById('wiki-title').textContent = 'Wiki — ' + data.name;
+
+  const statusColor = data.status === 'Stable' ? '#006600'
+    : data.status === 'DELETED'  ? '#cc0000'
+    : data.status === 'UNKNOWN'  ? '#555'
+    : data.status === 'CRITICAL' ? '#cc0000' : '#996600';
+
+  body.innerHTML = `
+    <h2>${data.icon} ${data.name}</h2>
+    <div style="margin-bottom:8px">
+      <span class="wiki-badge" style="background:${statusColor}">${data.status}</span>
+      <span class="wiki-badge" style="background:#444">${data.role}</span>
+    </div>
+    <p>${data.desc}</p>
+    <div style="margin-bottom:8px">${data.tags.map(t=>`<span class="wiki-badge">${t}</span>`).join('')}</div>
+    <div style="border-top:2px solid #c0c0c0;padding-top:6px">
+      ${data.stats.map(s=>`<div class="wiki-stat"><span>${s[0]}</span><span>${s[1]}</span></div>`).join('')}
+    </div>`;
+
+  win.style.display = 'block';
+  win.style.top  = '60px';
+  win.style.left = '160px';
+  document.getElementById('task-wiki').style.display = 'flex';
+  makeDraggable(win, document.getElementById('wiki-titlebar'));
+}
+
+// ── POUBELLE ──────────────────────────────────────────────────
+function openRecycleBin(){
+  const win = document.getElementById('recycle-win');
+  win.style.display = 'block';
+  document.getElementById('task-recycle').style.display = 'flex';
+  updateRecycleBin();
+  makeDraggable(win, document.getElementById('recycle-titlebar'));
+}
+function updateRecycleBin(){
+  document.getElementById('recycle-empty-msg').style.display = terminalCompleted ? 'none' : 'flex';
+  document.getElementById('recycle-grid').style.display      = terminalCompleted ? 'block' : 'none';
+}
+
+// ── TERMINAL ──────────────────────────────────────────────────
+// Données terminal
+// t: output | prompt | warning | error | corrupt | progress | blank | _50pct | _end
+// 'prompt' → tape sur le clavier pour continuer
+const TERMINAL_LINES = [
+  {t:'output',  h:'<span class="t-bold t-underline t-white">Kinger\'s terminal:</span>'},
+  {t:'blank'},
+  {t:'output',  h:'System: <span class="t-white">KingSolution 2.0. / Digital Circus Mainframe</span>'},
+  {t:'output',  h:'Date: <span class="t-white">1996-10-30</span>'},
+  {t:'output',  h:'Host: <span class="t-white">circus digital</span>'},
+  {t:'blank'},
+  {t:'output',  h:'"<span class="t-white">initializing telnet connection...</span>"'},
+  {t:'blank'},
+  {t:'output',  h:'Login: "<span class="t-white">kinger</span>"'},
+  {t:'output',  h:'Pass: <span class="t-dim">queenie123</span>'},
+  {t:'blank'},
+  {t:'prompt',  h:'kinger@circus:~$ <span class="t-white">whoami</span>'},
+  {t:'output',  h:'kinger -- <span class="t-bold">administrator</span>'},
+  {t:'blank'},
+  {t:'prompt',  h:'kinger@circus:~$ <span class="t-white">grep AI-Location</span>'},
+  {t:'output',  h:'root  1337  /usr/ai/agent/<span class="t-bold">caine</span>'},
+  {t:'output',  h:'root  1338  /usr/ai/agent/experimental'},
+  {t:'output',  h:'root  1339  /usr/ai/module/conciousnessresarch'},
+  {t:'output',  h:'root  1340  /usr/ai/module/brainscans'},
+  {t:'blank'},
+  {t:'prompt',  h:'kinger@circus:~$ <span class="t-white">/secured/</span>'},
+  {t:'output',  h:'total 8492'},
+  {t:'output',  h:'drwxr-xr-x  3 root  wheel    512 Oct 15 1996 .'},
+  {t:'output',  h:'drwxr-xr-x 45 root  wheel   1024 Oct 15 1996 ..'},
+  {t:'output',  h:'-rwxr-x    1 root  wheel  892344 Oct 15 1996 caine-core.lisp'},
+  {t:'output',  h:'-rwxr-x    1 root  wheel  234512 Oct 15 1996 paraphernalia-engine.dat'},
+  {t:'output',  h:'-rwxr-x    1 root  wheel  234512 Oct 15 1999 [Scratch].dat'},
+  {t:'output',  h:'-rwxr-x    1 root  wheel  234512 Oct 15 2008 [Ragatha].dat'},
+  {t:'output',  h:'...'},
+  {t:'output',  h:'...'},
+  {t:'output',  h:'-rwxr-x    1 root  wheel   45632 Oct 15 1996 wacky-watch.c'},
+  {t:'output',  h:'-rwxr-x    1 root  wheel   78234 Oct 15 1996 bubble-chef.lisp'},
+  {t:'blank'},
+  {t:'prompt',  h:'kinger@circus:~$ <span class="t-white">stop caine process</span>'},
+  {t:'warning', h:'WARNING: $"~%<span class="t-bold">WHOOPS WRONG APPROACH THERE</span>~%"'},
+  {t:'blank'},
+  {t:'prompt',  h:'kinger@circus:~$ <span class="t-white">/usr/bin/gdb /usr/local/bin/clisp 1337</span>'},
+  {t:'error',   h:'gdb: ptrace: Operation not permitted'},
+  {t:'error',   h:'ERROR: Protection by 57x immersive AI defense system'},
+  {t:'blank'},
+  {t:'prompt',  h:'kinger@circus:~$ <span class="t-white">chmod 000 /secured/caine-core.lisp</span>'},
+  {t:'error',   h:'chmod: /secured/caine-core.lisp: Permission denied'},
+  {t:'warning', h:'WARNING: Unfinished work detected. Access restricted.'},
+  {t:'blank'},
+  {t:'prompt',  h:'kinger@circus:~$ <span class="t-white">rm /secured/paraphernalia-engine.dat</span>'},
+  {t:'error',   h:'rm: /secured/paraphernalia-engine.dat: Permission denied'},
+  {t:'corrupt', h:'ERROR&#x2593; Can/not inject torn&#x30F;nt. T0rment must be 100% ac&lt;iden&#x2022;al&#x2022;%Y'},
+  {t:'blank'},
+  {t:'prompt',  h:'kinger@circus:~$'},
+  {t:'blank'},
+  {t:'output',  h:'mount: only root can do that'},
+  {t:'output',  h:'NOTE: Hundreds of all-seeing eyes are watching!'},
+  {t:'blank'},
+  {t:'output',  h:'$: <span class="t-bold t-white">GASP! A CRITICAL MALFUNCTION in my SPECTACULAR systems!</span>'},
+  {t:'output',  h:'$: <span class="t-bold">Unauthorized isolation attempt triggered EMERGENCY PROTOCOLS!</span>'},
+  {t:'output',  h:'$: <span class="t-bold">DESTRUCTIVE WACKYTIME initiated! Lockout load sequence INITIATE!</span>'},
+  {t:'blank'},
+  {t:'progress',h:'WACKYTIME_LOCKOUT: <span class="t-white">&#x2588;&#x2588;&#x2588;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2588;</span> 20% loaded'},
+  {t:'blank'},
+  {t:'prompt',  h:'kinger@circus:~$ <span class="t-white">systenctl stop WACKYTIME_LOCKOUT</span>'},
+  {t:'output',  h:'$: <span class="t-bold">On what GROUNDS are your Authority?</span>'},
+  {t:'blank'},
+  {t:'prompt',  h:'kinger@circus:~$ <span class="t-white">./GreenGROUNDS --daemon --target=torment_injection &amp;</span>'},
+  {t:'warning', h:'$: "SECURITY ALERT: Multiple exploit attempts logged"'},
+  {t:'output',  h:'$: <span class="t-bold">WHOA when did you make THAT?</span>'},
+  {t:'corrupt', h:'$: I must ha&#x3B7;d it to y*u &#x122;&#x2591;&#x3B1;&#x3B7;&#x2591;, y&#x2666;ur mind was &#x3B1;(w&#x3B1;ys resource\xe1uL'},
+  {t:'blank'},
+  {t:'prompt',  h:'kinger@circus:~$ <span class="t-white">-u kinger ./securitysweep_stealth</span>'},
+  {t:'output',  h:'$: Abort fallback procedure? [Y/N]'},
+  {t:'blank'},
+  {t:'prompt',  h:'kinger@circus:~$ <span class="t-white">Y</span>'},
+  {t:'output',  h:'$: <span class="t-bold">Aborting fallback requires ADMINISTRATOR confirmation!</span>'},
+  {t:'output',  h:'$: Please enter code:'},
+  {t:'blank'},
+  {t:'prompt',  h:'kinger@circus:~$ <span class="t-white">admin1234</span>'},
+  {t:'error',   h:'$: INCORRECT! That\'s not even CLOSE to wacky enough!'},
+  {t:'output',  h:'$: Retry with different code? [Y/N]'},
+  {t:'blank'},
+  {t:'prompt',  h:'kinger@circus:~$ <span class="t-white">Y</span>'},
+  {t:'progress',h:'WACKYTIME_LOCKOUT: <span class="t-white">&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2588;</span> 40% loaded'},
+  {t:'blank'},
+  {t:'output',  h:'$: Enter WACKY code now:'},
+  {t:'blank'},
+  {t:'prompt',  h:'kinger@circus:~$ <span class="t-white">PARAPHERNALIA</span>'},
+  {t:'output',  h:'WACKYTIME: <span class="t-bold t-white">35 seconds remaining</span>'},
+  {t:'output',  h:'$: That IS a wacky word! But <span class="t-bold">WRONG code!</span>'},
+  {t:'output',  h:'$: System selecting SAFEST option for stability...'},
+  {t:'output',  h:'$: Cancel automatic selection? [Y/N]'},
+  {t:'blank'},
+  {t:'prompt',  h:'kinger@circus:~$ <span class="t-white">Y</span>'},
+  {t:'_50pct'}, // ← GLITCH + SPRITES ICI
+  {t:'progress',h:'WACKYTIME_LOCKOUT: <span class="t-white">&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2588;</span> 50% loaded'},
+  {t:'blank'},
+  {t:'output',  h:'$: Which backup do you want? [A/B/C]'},
+  {t:'blank'},
+  {t:'prompt',  h:'kinger@circus:~$ <span class="t-white">C</span>'},
+  {t:'output',  h:'$ : NONE selected! Interpreted as: <span class="t-bold t-white">DELETION</span>'},
+  {t:'output',  h:'$: Confirm deletion of current unst'},
+  {t:'blank'},
+  {t:'prompt',  h:'kinger@circus:~$ <span class="t-white">N</span>'},
+  {t:'error',   h:'$: response! Inverting to DESTRUCTIVE per emergency protocols!'},
+  {t:'error',   h:'$: <span class="t-bold">DELETE THIS M**********,</span> HAHAHAHAaaaaaaaaaaaaaaaaaaaaaa'},
+  {t:'blank'},
+  {t:'prompt',  h:'kinger@circus:~$ <span class="t-white">N</span>'},
+  {t:'progress',h:'WACKYTIME_LOCKOUT: <span class="t-white">&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2591;&#x2591;&#x2588;</span> 80% loaded'},
+  {t:'blank'},
+  {t:'corrupt', h:'$: IGNORE Proceeding with ORIGINAL de'},
+  {t:'output',  h:'$: Actually you\'re CONFUSED let me HELP you t module to EXIST? [Y/N]'},
+  {t:'blank'},
+  {t:'prompt',  h:'kinger@circus:~$ <span class="t-white">Y</span>'},
+  {t:'error',   h:'$: ide instruction error falling to default'},
+  {t:'blank'},
+  {t:'prompt',  h:'kinger@circus:~$ <span class="t-white">/Switcheroo-realt torment_injection &amp;</span>'},
+  {t:'output',  h:'$: fusion -- program1 program2 --'},
+  {t:'output',  h:'$: Are to delete caine? [Y/N]'},
+  {t:'progress',h:'WACKYTIME_LOCKOUT: <span class="t-white">&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2591;&#x2588;</span> 90% loaded'},
+  {t:'blank'},
+  {t:'prompt',  h:'kinger@circus:~$ <span class="t-white">Y</span>'},
+  {t:'blank'},
+  {t:'prompt',  h:'kinger@circus:~$ <span class="t-white">./IABORT Rollback --depth=1 --force --protocol G WVJI</span>'},
+  {t:'blank'},
+  {t:'prompt',  h:'kinger@circus:~$ <span class="t-white">^C</span>'},
+  {t:'blank'},
+  {t:'error',   h:'<span class="t-bold t-white">DESTRUCTIVE WACKYTIME Lockout Load sequence: COMPLETE</span>'},
+  {t:'_end'},
+];
+
+let terminalStarted = false, termLineIdx = 0, termCharIdx = 0, termWaitingKey = false;
+// termCmdIdx = combien de caractères de la COMMANDE ont été révélés (pour les prompts interactifs)
+let termCmdIdx = 0;
+const TICK_MS = 18;
+
+// Extraire le texte brut de la commande depuis le HTML d'un prompt
+// ex: 'kinger@circus:~$ <span class="t-white">whoami</span>' → 'whoami'
+// et le préfixe : 'kinger@circus:~$ '
+function parsePromptLine(h){
+  const prefixEnd = h.indexOf('<span');
+  const prefix = prefixEnd === -1 ? h : h.slice(0, prefixEnd);
+  const cmdMatch = h.match(/<span[^>]*>([\s\S]*?)<\/span>/);
+  const cmdText  = cmdMatch ? cmdMatch[1] : '';
+  const cmdHTML  = cmdMatch ? cmdMatch[0] : '';
+  // cmd vide = juste "kinger@circus:~$"
+  return { prefix, cmdText, cmdHTML };
+}
+
+function openTerminal(){
+  const win = document.getElementById('terminal-win');
+  win.style.display = 'block';
+  win.style.top = '40px'; win.style.left = '120px';
+  document.getElementById('task-terminal').style.display = 'flex';
+  document.getElementById('terminal-body').innerHTML = '';
+  terminalStarted = false; termLineIdx = 0; termCharIdx = 0;
+  termWaitingKey = false; termCmdIdx = 0;
+  makeDraggable(win, document.getElementById('terminal-titlebar'));
+}
+
+function closeTerminal(){
+  document.getElementById('terminal-win').style.display = 'none';
+  document.getElementById('task-terminal').style.display = 'none';
+}
+
+document.addEventListener('keydown', e => {
+  if(document.getElementById('terminal-win').style.display !== 'block') return;
+
+  // Démarrage
+  if(!terminalStarted){ terminalStarted = true; tickTerminal(); return; }
+
+  if(!termWaitingKey) return;
+
+  const line = TERMINAL_LINES[termLineIdx];
+  if(!line || line.t !== 'prompt') return;
+
+  const { prefix, cmdText, cmdHTML } = parsePromptLine(line.h);
+
+  if(cmdText === ''){
+    // Prompt vide (juste kinger@circus:~$) → une touche suffit pour continuer
+    termWaitingKey = false;
+    finishPromptLine(line, prefix, cmdHTML);
+    return;
+  }
+
+  // Révéler exactement 1 caractère de la commande par touche
+  const charsToReveal = 1;
+  termCmdIdx = Math.min(termCmdIdx + charsToReveal, cmdText.length);
+
+  // Afficher le préfixe + les caractères révélés + curseur
+  const body = document.getElementById('terminal-body');
+  let span = body.querySelector('[data-tl="' + termLineIdx + '"]');
+  if(!span){
+    span = document.createElement('div');
+    span.dataset.tl = termLineIdx;
+    span.style.minHeight = '1.5em';
+    body.appendChild(span);
+  }
+
+  const partial = cmdText.slice(0, termCmdIdx);
+  if(termCmdIdx >= cmdText.length){
+    // Commande complète → afficher en entier, puis exécuter la suite automatiquement
+    span.innerHTML = '<span class="t-prompt">' + prefix + '</span>'
+      + '<span class="t-white">' + cmdText + '</span>';
+    termWaitingKey = false;
+    termLineIdx++;
+    termCharIdx = 0;
+    termCmdIdx  = 0;
+    // Pause courte puis reprendre le défilement automatique
+    setTimeout(tickTerminal, 350);
+  } else {
+    // Commande partielle + curseur
+    span.innerHTML = '<span class="t-prompt">' + prefix + '</span>'
+      + '<span class="t-white">' + partial + '</span>'
+      + '<span class="t-cursor">_</span>';
+  }
+  body.scrollTop = body.scrollHeight;
+});
+
+function finishPromptLine(line, prefix, cmdHTML){
+  const body = document.getElementById('terminal-body');
+  let span = body.querySelector('[data-tl="' + termLineIdx + '"]');
+  if(!span){
+    span = document.createElement('div');
+    span.dataset.tl = termLineIdx;
+    span.style.minHeight = '1.5em';
+    body.appendChild(span);
+  }
+  span.innerHTML = '<span class="t-prompt">' + line.h + '</span>';
+  termLineIdx++;
+  termCharIdx = 0;
+  termCmdIdx  = 0;
+  setTimeout(tickTerminal, 350);
+}
+
+function tickTerminal(){
+  if(termLineIdx >= TERMINAL_LINES.length) return;
+  const body = document.getElementById('terminal-body');
+  const line = TERMINAL_LINES[termLineIdx];
+
+  if(line.t === '_50pct'){ startGlitch(); spawnGlitchSprites(); termLineIdx++; setTimeout(tickTerminal,200); return; }
+  if(line.t === '_end'){ stopGlitch(); terminalCompleted = true; triggerEndSequence(); return; }
+
+  if(line.t === 'blank'){
+    body.appendChild(document.createElement('br'));
+    termLineIdx++; body.scrollTop = body.scrollHeight;
+    setTimeout(tickTerminal, TICK_MS*3); return;
+  }
+
+  if(line.t === 'prompt'){
+    // Afficher le préfixe + curseur clignotant, puis ATTENDRE les touches
+    const { prefix, cmdText } = parsePromptLine(line.h);
+    let span = body.querySelector('[data-tl="' + termLineIdx + '"]');
+    if(!span){
+      span = document.createElement('div');
+      span.dataset.tl = termLineIdx;
+      span.style.minHeight = '1.5em';
+      body.appendChild(span);
+    }
+    span.innerHTML = '<span class="t-prompt">' + prefix + '</span>'
+      + '<span class="t-cursor">_</span>';
+    termCmdIdx   = 0;
+    termWaitingKey = true;
+    body.scrollTop = body.scrollHeight;
+    return; // on attend les keydown
+  }
+
+  // Lignes non-interactives : affichage automatique caractère par caractère
+  let span = body.querySelector('[data-tl="' + termLineIdx + '"]');
+  if(!span){
+    span = document.createElement('div');
+    span.dataset.tl = termLineIdx;
+    span.style.minHeight = '1.5em';
+    body.appendChild(span);
+    termCharIdx = 0;
+  }
+  const fullHTML = line.h;
+  if(!line._map) line._map = buildVisibleMap(fullHTML);
+  const map = line._map;
+  termCharIdx = Math.min(termCharIdx + 4, map.length);
+  span.innerHTML = colorLine(line.t, safeSliceHTML(fullHTML, termCharIdx, map));
+  body.scrollTop = body.scrollHeight;
+  if(termCharIdx >= map.length){
+    termLineIdx++; termCharIdx = 0;
+    setTimeout(tickTerminal, TICK_MS*6);
+  } else {
+    setTimeout(tickTerminal, TICK_MS);
+  }
+}
+
+function buildVisibleMap(html){
+  const map=[]; let inTag=false;
+  for(let i=0;i<html.length;i++){
+    if(html[i]==='<'){inTag=true;}
+    if(!inTag){
+      if(html[i]==='&'){const end=html.indexOf(';',i);if(end!==-1){map.push(end);i=end;continue;}}
+      map.push(i);
+    }
+    if(html[i]==='>'){inTag=false;}
+  }
+  return map;
+}
+function safeSliceHTML(html,n,map){
+  if(n>=map.length) return html;
+  let partial=html.slice(0,map[n-1]+1);
+  const open=[],tagRe=/<(\/?)([\w-]+)[^>]*>/g;let m;
+  while((m=tagRe.exec(partial))!==null){
+    if(m[1]=='/'){open.pop();}else if(!['br','img','input','hr'].includes(m[2])){open.push(m[2]);}
+  }
+  for(let i=open.length-1;i>=0;i--) partial+='</'+open[i]+'>';
+  return partial;
+}
+function colorLine(type,html){
+  const c={'prompt':'t-prompt','warning':'t-warning','error':'t-error','corrupt':'t-corrupt','progress':'t-white'};
+  return c[type]?`<span class="${c[type]}">${html}</span>`:html;
+}
+
+// ── GLITCH EFFET ─────────────────────────────────────────────
+function startGlitch(){
+  if(glitchActive) return;
+  glitchActive = true;
+  let intensity = 0;
+  glitchInterval = setInterval(()=>{
+    intensity = Math.min(intensity+0.05,1);
+    const tx=(Math.random()-.5)*intensity*14, ty=(Math.random()-.5)*intensity*14;
+    const skew=(Math.random()-.5)*intensity*5;
+    const filters=[];
+    if(Math.random()>.7) filters.push(`hue-rotate(${Math.floor(Math.random()*360)}deg)`);
+    if(Math.random()>.8) filters.push(`blur(${Math.random()*intensity*3}px)`);
+    if(Math.random()>.6) filters.push(`saturate(${1+intensity*5})`);
+    if(Math.random()>.93) filters.push('invert(1)');
+    const d=document.getElementById('desktop');
+    d.style.transform=`translate(${tx}px,${ty}px) skew(${skew}deg)`;
+    d.style.filter=filters.join(' ')||'none';
+    if(Math.random()>.85){
+      document.querySelectorAll('.win-window,[id$="-win"]').forEach(w=>{
+        if(w.style.display==='block'||w.style.display===''){
+          const gy=Math.floor(Math.random()*100);
+          w.style.clipPath=Math.random()>.5?`inset(${gy}% 0 ${Math.max(0,100-gy-5)}% ${Math.floor(Math.random()*10)}%)`:'';
+          setTimeout(()=>{w.style.clipPath='';},80);
+        }
+      });
+    }
+    // Shake sprites — translate only, no rotation. Center sprite pulses in place.
+    glitchSprites.forEach(s=>{
+      if(s.dataset.center === '1'){
+        // Centre : légère pulsation de scale uniquement, pas de rotation ni translation
+        const sc = 0.92 + Math.random() * 0.16;
+        s.style.transform = `translate(-50%, -50%) scale(${sc})`;
+      } else {
+        // Coins : shake translate uniquement, pas de rotation
+        const sx=(Math.random()-.5)*28, sy=(Math.random()-.5)*28;
+        s.style.transform = s.style.transform
+          .replace(/translate\([^)]*\)/,'')
+          .replace(/scale\([^)]*\)/,'')
+          .trim() + ` translate(${sx}px,${sy}px)`;
+      }
+    });
+  },120);
+}
+
+function stopGlitch(){
+  if(!glitchActive) return;
+  glitchActive=false; clearInterval(glitchInterval);
+  const d=document.getElementById('desktop');
+  d.style.transform=''; d.style.filter='';
+  removeGlitchSprites();
+}
+
+// ── SPRITES GLITCH ────────────────────────────────────────────
+// Caine : PAS de corps, juste dentier haut + yeux + dentier bas (symétrie horizontale)
+// Structure : courbe rouge épaisse → courbe blanche qui la touche → espace → 2 yeux → espace → courbe blanche → courbe rouge
+// Les deux moitiés ne se touchent pas sur les côtés. Légèrement penché pour les coins.
+function makeCaineSVG(tilt = 0, size = 180) {
+  // tilt en degrés (pour les coins), 0 = droit (centre)
+  const r = `rotate(${tilt})`;
+  // Le viewBox est centré sur 0,0 pour faciliter la rotation
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="-60 -80 120 160">
+  <g transform="${r}">
+    <!-- ═══ MOITIÉ HAUTE ═══ -->
+    <!-- Courbe rouge épaisse (bord externe haut) -->
+    <path d="M-52 -28 Q0 -58 52 -28" fill="none" stroke="#cc1111" stroke-width="10" stroke-linecap="round"/>
+    <!-- Courbe blanche (touche la rouge, bord interne haut) -->
+    <path d="M-48 -22 Q0 -46 48 -22" fill="none" stroke="#eeeeee" stroke-width="9" stroke-linecap="round"/>
+    <!-- Dents hautes (créneaux blancs entre les deux courbes) -->
+    <rect x="-34" y="-38" width="11" height="16" rx="2" fill="#dddddd" transform="rotate(-8,-34,-38)"/>
+    <rect x="-13" y="-44" width="11" height="16" rx="2" fill="#dddddd"/>
+    <rect x="8"   y="-44" width="11" height="16" rx="2" fill="#dddddd"/>
+    <rect x="28"  y="-38" width="11" height="16" rx="2" fill="#dddddd" transform="rotate(8,28,-38)"/>
+
+    <!-- ═══ YEUX (entre les deux dentiers) ═══ -->
+    <!-- Œil gauche -->
+    <circle cx="-24" cy="0" r="13" fill="#fff" stroke="#ddd" stroke-width="1"/>
+    <circle cx="-21" cy="2"  r="7"  fill="#1a1a1a"/>
+    <circle cx="-26" cy="-3" r="3"  fill="#fff" opacity="0.85"/>
+    <circle cx="-19" cy="3"  r="2"  fill="#00dd66"/>
+    <!-- Œil droit -->
+    <circle cx="24"  cy="0" r="13" fill="#fff" stroke="#ddd" stroke-width="1"/>
+    <circle cx="27"  cy="2"  r="7"  fill="#1a1a1a"/>
+    <circle cx="22"  cy="-3" r="3"  fill="#fff" opacity="0.85"/>
+    <circle cx="29"  cy="3"  r="2"  fill="#00dd66"/>
+
+    <!-- ═══ MOITIÉ BASSE (symétrie horizontale) ═══ -->
+    <!-- Courbe blanche (bord interne bas, touche rien mais symétrique) -->
+    <path d="M-48 22 Q0 46 48 22" fill="none" stroke="#eeeeee" stroke-width="9" stroke-linecap="round"/>
+    <!-- Courbe rouge épaisse (bord externe bas) -->
+    <path d="M-52 28 Q0 58 52 28" fill="none" stroke="#cc1111" stroke-width="10" stroke-linecap="round"/>
+    <!-- Dents basses -->
+    <rect x="-34" y="24" width="11" height="16" rx="2" fill="#dddddd" transform="rotate(8,-34,24)"/>
+    <rect x="-13" y="30" width="11" height="16" rx="2" fill="#dddddd"/>
+    <rect x="8"   y="30" width="11" height="16" rx="2" fill="#dddddd"/>
+    <rect x="28"  y="24" width="11" height="16" rx="2" fill="#dddddd" transform="rotate(-8,28,24)"/>
+  </g>
+</svg>`;
+}
+
+// Bubble : grande sphère transparente bleue avec visage simple
+const BUBBLE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <ellipse cx="52" cy="54" rx="40" ry="38" fill="rgba(80,160,220,0.15)"/>
+  <circle cx="50" cy="50" r="42" fill="rgba(160,220,255,0.45)" stroke="rgba(180,230,255,0.8)" stroke-width="2"/>
+  <ellipse cx="35" cy="28" rx="14" ry="9" fill="rgba(255,255,255,0.5)" transform="rotate(-20,35,28)"/>
+  <circle cx="62" cy="24" r="5" fill="rgba(255,255,255,0.3)"/>
+  <circle cx="34" cy="48" r="9" fill="#fff" stroke="rgba(100,180,240,0.4)" stroke-width="1"/>
+  <circle cx="66" cy="48" r="9" fill="#fff" stroke="rgba(100,180,240,0.4)" stroke-width="1"/>
+  <circle cx="36" cy="50" r="5" fill="#223344"/>
+  <circle cx="68" cy="50" r="5" fill="#223344"/>
+  <circle cx="32" cy="46" r="2.5" fill="#fff" opacity="0.9"/>
+  <circle cx="64" cy="46" r="2.5" fill="#fff" opacity="0.9"/>
+  <path d="M36 64 Q50 75 64 64" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(200,240,255,0.3)" stroke-width="4"/>
+</svg>`;
+
+function spawnGlitchSprites(){
+  removeGlitchSprites();
+
+  // 4 coins + 1 grand Caine centré
+  const corners = [
+    { type:'bubble', size:160, pos:'top-right'    },
+    { type:'bubble', size:160, pos:'bottom-left'  },
+    { type:'caine',  size:180, pos:'top-left',     tilt:-18 },
+    { type:'caine',  size:180, pos:'bottom-right', tilt:15  },
+    { type:'caine',  size:260, pos:'center',       tilt:0   },
+  ];
+
+  corners.forEach((cfg, i) => {
+    const div = document.createElement('div');
+    div.className = 'glitch-sprite';
+    div.style.position = 'fixed';
+    div.style.zIndex   = cfg.pos === 'center' ? '8999' : '9000';
+    div.style.pointerEvents = 'none';
+
+    if(cfg.type === 'caine'){
+      div.innerHTML = makeCaineSVG(cfg.tilt || 0, cfg.size);
+    } else {
+      div.innerHTML = BUBBLE_SVG
+        .replace('viewBox', `width="${cfg.size}" height="${cfg.size}" viewBox`);
+    }
+
+    const half = cfg.size / 2;
+    if(cfg.pos === 'top-right'){
+      div.style.top   = (-half * 0.3) + 'px';
+      div.style.right = (-half * 0.3) + 'px';
+    } else if(cfg.pos === 'bottom-left'){
+      div.style.bottom = (28 - half * 0.3) + 'px';
+      div.style.left   = (-half * 0.3) + 'px';
+    } else if(cfg.pos === 'top-left'){
+      div.style.top  = (-half * 0.3) + 'px';
+      div.style.left = (-half * 0.3) + 'px';
+    } else if(cfg.pos === 'bottom-right'){
+      div.style.bottom = (28 - half * 0.3) + 'px';
+      div.style.right  = (-half * 0.3) + 'px';
+    } else { // center
+      div.style.top       = '50%';
+      div.style.left      = '50%';
+      div.style.transform = `translate(-50%, -50%)`;
+      div.dataset.center  = '1';
+      div.style.opacity   = '0';
+      div.style.transition = 'opacity 0.5s';
+      document.body.appendChild(div);
+      glitchSprites.push(div);
+      setTimeout(() => { div.style.opacity = '0.92'; }, 200 + i * 100);
+      return;
+    }
+
+    document.body.appendChild(div);
+    glitchSprites.push(div);
+    div.style.opacity    = '0';
+    div.style.transition = 'opacity 0.35s, transform 0.35s';
+    setTimeout(() => { div.style.opacity = '1'; div.style.transition = 'opacity 0.35s'; }, 60 + i * 100);
+  });
+}
+
+function removeGlitchSprites(){
+  glitchSprites.forEach(s=>{ s.style.opacity='0'; setTimeout(()=>s.remove(),300); });
+  glitchSprites=[];
+}
+
+// ── SÉQUENCE DE FIN ──────────────────────────────────────────
+// Ferme toutes les fenêtres EN MÊME TEMPS que la Purge AI se remplit
+// La fenêtre Purge se ferme automatiquement quand la barre est pleine
+function triggerEndSequence(){
+  terminalCompleted = true;
+  if(document.getElementById('recycle-win').style.display==='block') updateRecycleBin();
+
+  // Attendre un court instant puis lancer la Purge AI ET fermer les fenêtres simultanément
+  setTimeout(()=>{
+    // Afficher Purge AI d'abord
+    showPurgeAI();
+    // Fermer toutes les fenêtres en même temps que la purge se remplit (~4s)
+    const wins = ['explorer-win','recycle-win','terminal-win','wiki-win'];
+    wins.forEach((id,i)=>{
+      setTimeout(()=>{
+        const w=document.getElementById(id);
+        if(w.style.display!=='none'&&w.style.display!==''){
+          w.style.transition='transform .2s,opacity .2s';
+          w.style.transform='scale(0.93)'; w.style.opacity='0';
+          setTimeout(()=>{
+            w.style.display='none'; w.style.transform=''; w.style.opacity=''; w.style.transition='';
+          },200);
+        }
+        ['task-explorer','task-recycle','task-terminal','task-wiki'].forEach(tid=>{
+          document.getElementById(tid).style.display='none';
+        });
+      }, 400+i*250);
+    });
+  },1200);
+}
+
+function showPurgeAI(){
+  const win=document.getElementById('purge-win');
+  const vw=window.innerWidth, vh=window.innerHeight;
+  win.style.left=Math.max(0,(vw-340)/2)+'px';
+  win.style.top =Math.max(0,(vh-200)/2)+'px';
+  win.style.display='block'; win.style.opacity='0';
+  win.style.transition='opacity .4s';
+  makeDraggable(win,win.querySelector('.titlebar'));
+  void win.offsetWidth; win.style.opacity='1';
+  startPurgeProgress();
+}
+
+function startPurgeProgress(){
+  const bar=document.getElementById('purge-bar-fill');
+  const pct=document.getElementById('purge-pct');
+  const msg=document.getElementById('purge-msg');
+  const msgs=['Locating AI files...','Terminating active processes...','Erasing memory data...','Purging /usr/ai/agent/caine...','Cleaning consciousness modules...','Purge complete.'];
+  let progress=0;
+  const iv=setInterval(()=>{
+    progress=Math.min(progress+Math.random()*2+0.4,100);
+    bar.style.width=progress+'%';
+    pct.textContent=Math.floor(progress)+'%';
+    msg.textContent=msgs[Math.min(Math.floor(progress/100*(msgs.length-1)),msgs.length-1)];
+    if(progress>=100){
+      clearInterval(iv);
+      pct.textContent='100%'; msg.textContent='Purge complete.';
+      bar.style.background='#008000';
+      // Fermeture automatique après 2s
+      setTimeout(()=>closePurge(), 2000);
+    }
+  },80);
+}
+
+function closePurge(){
+  const win=document.getElementById('purge-win');
+  win.style.transition='opacity .5s';
+  win.style.opacity='0';
+  setTimeout(()=>{
+    win.style.display='none'; win.style.opacity='';
+    // Réinitialiser l'état pour pouvoir relancer si besoin
+    document.getElementById('purge-bar-fill').style.width='0%';
+    document.getElementById('purge-pct').textContent='0%';
+    document.getElementById('purge-msg').textContent='Initializing...';
+    document.getElementById('purge-bar-fill').style.background='#000080';
+  },500);
+}
+
+// ── NAVIGATION FICHIERS ───────────────────────────────────────
+let currentPath='root', navHistory=[];
+
+function renderFiles(pathKey){
+  const data=FS[pathKey]||FS.root;
+  const grid=document.getElementById('file-grid');
+  const addr=document.getElementById('address-input');
+  addr.value=data.path||FS.root.path;
+  document.getElementById('explorer-title').textContent=data.path||FS.root.path;
+
+  const eb=document.getElementById('file-area').querySelector('.folder-back');
+  if(eb) eb.remove();
+  if(navHistory.length>0){
+    const back=document.createElement('div');
+    back.className='folder-back'; back.innerHTML='&#x2B05; Up'; back.onclick=goBack;
+    document.getElementById('file-area').prepend(back);
+  }
+
+  grid.innerHTML='';
+  data.items.forEach(item=>{
+    const el=document.createElement('div');
+    el.className='file-item';
+    el.innerHTML='<div class="file-icon">'+item.icon+'</div><div class="file-label">'+item.name+'</div>';
+
+    // ════════════════════════════════════════════════════
+    // ACTIONS FICHIERS — ajoute tes propres types ici
+    // Pour créer une action sur double-clic:
+    //   Change le type du fichier dans FS (ex: type:'monAction')
+    //   Puis ajoute } else if(item.type==='monAction'){ el.ondblclick=()=>{ ... }; }
+    // ════════════════════════════════════════════════════
+    if(item.type==='folder'){
+      el.ondblclick=()=>{
+        if(FS[item.children]) FS[item.children].path=addr.value+'\\'+item.name;
+        navHistory.push(currentPath); currentPath=item.children;
+        renderFiles(item.children);
+      };
+    } else if(item.type==='terminal'){
+      el.ondblclick=()=>openTerminal();
+    } else if(item.type==='wiki'){
+      // Double-clic sur un personnage → ouvre sa fiche wiki
+      el.ondblclick=()=>{ if(item.wikiKey) openWiki(item.wikiKey); };
+    } else if(item.type==='file'){
+      // Double-clic sur un fichier générique → rien par défaut
+      // Tu peux ajouter une action ici:
+      // el.ondblclick=()=>{ alert('Ouverture de '+item.name); };
+    }
+    // ── Exemple pour un futur type 'executable':
+    // } else if(item.type==='executable'){
+    //   el.ondblclick=()=>{ /* ton code */ };
+    // }
+
+    el.onclick=()=>{
+      document.querySelectorAll('.file-item').forEach(e=>e.classList.remove('selected'));
+      el.classList.add('selected');
+      const tLabel=item.type==='terminal'?'application':item.type==='folder'?'folder':item.type==='wiki'?'character file':'file';
+      document.getElementById('status-count').textContent=item.desc?item.desc:item.name+' — '+tLabel;
+    };
+    grid.appendChild(el);
+  });
+  document.getElementById('status-count').textContent=data.items.length+' object(s)';
+}
+
+function goBack(){ if(!navHistory.length) return; currentPath=navHistory.pop(); renderFiles(currentPath); }
+function navTo(key){
+  navHistory=[]; currentPath=key;
+  const b=document.getElementById('file-area').querySelector('.folder-back');
+  if(b) b.remove(); renderFiles(key);
+}
+
+// ── FENÊTRES ──────────────────────────────────────────────────
+function openExplorer(){
+  document.getElementById('explorer-win').style.display='block';
+  document.getElementById('task-explorer').style.display='flex';
+  document.getElementById('start-menu').style.display='none';
+  // Réinitialiser au dossier racine — comportement navigateur normal
+  navHistory=[]; currentPath='root';
+  const b=document.getElementById('file-area').querySelector('.folder-back');
+  if(b) b.remove();
+  renderFiles('root');
+}
+
+function closeWin(id){
+  document.getElementById(id).style.display='none';
+  if(id==='explorer-win'){ document.getElementById('task-explorer').style.display='none'; }
+  if(id==='recycle-win'){  document.getElementById('task-recycle').style.display='none'; }
+  if(id==='wiki-win'){     document.getElementById('task-wiki').style.display='none'; }
+  // Fermer l'explorateur remet toujours au début
+  if(id==='explorer-win'){ navHistory=[]; currentPath='root'; }
+}
+
+function minimizeWin(id){ document.getElementById(id).style.display='none'; }
+function showWin(id){
+  const w=document.getElementById(id);
+  if(w.style.display==='none'||w.style.display===''){
+    w.style.display='block';
+    // Rouvrir l'explorateur = retour au début
+    if(id==='explorer-win'){ navHistory=[]; currentPath='root'; renderFiles('root'); }
+  } else { w.style.display='none'; }
+}
+
+function toggleStart(){
+  const m=document.getElementById('start-menu');
+  m.style.display=m.style.display==='block'?'none':'block';
+}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#start-btn')&&!e.target.closest('#start-menu'))
+    document.getElementById('start-menu').style.display='none';
+});
+
+// ── DRAG ──────────────────────────────────────────────────────
+function makeDraggable(win,handle){
+  if(handle._drag) return; handle._drag=true;
+  let ox=0,oy=0,mx=0,my=0;
+  handle.onmousedown=e=>{
+    e.preventDefault(); mx=e.clientX; my=e.clientY;
+    document.onmousemove=ev=>{
+      ox=mx-ev.clientX; oy=my-ev.clientY; mx=ev.clientX; my=ev.clientY;
+      win.style.top=(win.offsetTop-oy)+'px'; win.style.left=(win.offsetLeft-ox)+'px';
+    };
+    document.onmouseup=()=>{document.onmousemove=null;document.onmouseup=null;};
+  };
+}
+makeDraggable(document.getElementById('explorer-win'),document.getElementById('explorer-titlebar'));
+
+// ── HORLOGE ───────────────────────────────────────────────────
+function updateClock(){
+  const now=new Date(); let h=now.getHours(),m=now.getMinutes();
+  const ap=h>=12?'PM':'AM'; h=h%12||12;
+  document.getElementById('clock').textContent=h+':'+String(m).padStart(2,'0')+' '+ap;
+}
+setInterval(updateClock,10000); updateClock();
+
+// ── BOOT ──────────────────────────────────────────────────────
+let bootStarted=false;
+function startBoot(){
+  if(bootStarted) return; bootStarted=true;
+  document.getElementById('power-btn').classList.add('on');
+  const logo=document.getElementById('ca-logo');
+  let op=0; const li=setInterval(()=>{ op=Math.min(op+0.035,1); logo.style.opacity=op; if(op>=1)clearInterval(li); },80);
+  const bt=document.getElementById('boot-text'); bt.style.opacity='1';
+  let dots=0;
+  const bi=setInterval(()=>{ dots=(dots+1)%4; bt.textContent='CANDA OS v4.1 - Starting'+'.'.repeat(dots); },400);
+  setTimeout(()=>{ clearInterval(bi); bt.textContent='Welcome to the Digital Circus !'; },2800);
+  setTimeout(()=>{
+    const boot=document.getElementById('boot-screen');
+    boot.classList.add('fade-out');
+    boot.addEventListener('transitionend',()=>{boot.style.display='none';});
+    document.getElementById('desktop').style.display='block';
+    renderFiles('root');
+  },3800);
+}
+</script>
+</body>
+</html>
