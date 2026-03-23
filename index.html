@@ -1149,7 +1149,9 @@ function makeBubbleSVG(tilt = 0, size = 160) {
     if(cfg.type === 'caine'){
       div.innerHTML = makeCaineSVG(cfg.tilt || 0, cfg.size);
     } else {
-     div.innerHTML = makeBubbleSVG(cfg.tilt || 0, cfg.size);
+      div.innerHTML = makeBubbleSVG(cfg.tilt || 0, cfg.size);
+    }
+    const half = cfg.size / 2;
     const half = cfg.size / 2;
     if(cfg.pos === 'top-right'){
       div.style.top   = (-half * 0.3) + 'px';
