@@ -1132,7 +1132,7 @@ function makeBubbleSVG(tilt = 0, size = 160) {
 
   // 4 coins + 1 grand Caine centré
   const corners = [
-    { type:'bubble', size:240, pos:'top-right'    },
+    { type:'bubble', size:240, pos:'top-right',    tilt:20  },
     { type:'bubble', size:240, pos:'bottom-left',  tilt:-10 },
     { type:'caine',  size:250, pos:'top-left',     tilt:-18 },
     { type:'caine',  size:250, pos:'bottom-right', tilt:15  },
@@ -1149,10 +1149,7 @@ function makeBubbleSVG(tilt = 0, size = 160) {
     if(cfg.type === 'caine'){
       div.innerHTML = makeCaineSVG(cfg.tilt || 0, cfg.size);
     } else {
-      div.innerHTML = BUBBLE_SVG
-        .replace('viewBox', `width="${cfg.size}" height="${cfg.size}" viewBox`);
-    }
-
+     div.innerHTML = makeBubbleSVG(cfg.tilt || 0, cfg.size);
     const half = cfg.size / 2;
     if(cfg.pos === 'top-right'){
       div.style.top   = (-half * 0.3) + 'px';
