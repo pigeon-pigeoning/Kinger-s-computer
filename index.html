@@ -1151,7 +1151,7 @@ function makeBubbleSVG(tilt = 0, size = 160) {
     } else {
       div.innerHTML = makeBubbleSVG(cfg.tilt || 0, cfg.size);
     }
-    const half = cfg.size / 2;
+
     const half = cfg.size / 2;
     if(cfg.pos === 'top-right'){
       div.style.top   = (-half * 0.3) + 'px';
@@ -1165,7 +1165,7 @@ function makeBubbleSVG(tilt = 0, size = 160) {
     } else if(cfg.pos === 'bottom-right'){
       div.style.bottom = (28 - half * 0.3) + 'px';
       div.style.right  = (-half * 0.3) + 'px';
-    } else { // center
+    } else {
       div.style.top       = '50%';
       div.style.left      = '50%';
       div.style.transform = `translate(-50%, -50%)`;
@@ -1181,8 +1181,8 @@ function makeBubbleSVG(tilt = 0, size = 160) {
     document.body.appendChild(div);
     glitchSprites.push(div);
     div.style.opacity    = '0';
-    div.style.transition = 'opacity 0.35s, transform 0.35s';
-    setTimeout(() => { div.style.opacity = '1'; div.style.transition = 'opacity 0.35s'; }, 60 + i * 100);
+    div.style.transition = 'opacity 0.35s';
+    setTimeout(() => { div.style.opacity = '1'; }, 60 + i * 100);
   });
 }
 
